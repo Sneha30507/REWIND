@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "Rewind AI API"
-    app_version: str = "0.1.0"
+    app_version: str = "0.2.0"
     environment: str = "development"
 
     # Default: a SQLite file inside backend/. Works with no extra setup.

@@ -1,8 +1,9 @@
 import { useState } from 'react'
+import { useAuth } from '../auth'
 import PageHeader from '../components/PageHeader'
 import Toggle from '../components/Toggle'
 import { connectedApps } from '../data'
-import { ghostBtn, inputCls, panelCls, primaryBtn } from '../ui'
+import { ghostBtn, panelCls, primaryBtn } from '../ui'
 
 interface Prefs {
   autoRemember: boolean
@@ -19,7 +20,7 @@ const prefRows: { key: keyof Prefs; label: string; desc: string }[] = [
 ]
 
 export default function Settings() {
-  const [profile, setProfile] = useState({ name: 'Sneha', email: 'sneha@example.com' })
+  const { user, displayName, logout } = useAuth()
   const [prefs, setPrefs] = useState<Prefs>({ autoRemember: true, weeklySummary: true, emailAlerts: false, privateMode: false })
   const [apps, setApps] = useState(connectedApps)
   const [saved, setSaved] = useState(false)
@@ -60,18 +61,13 @@ export default function Settings() {
         <h2 className="mb-4 text-[17px] font-semibold">Profile</h2>
         <div className="flex items-center gap-4">
           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#8B6BFF] to-[#E56BC3] text-xl font-bold text-white">
-            {profile.name.trim()[0]?.toUpperCase() ?? 'S'}
+            {displayName[0] ?? '?'}
           </div>
-          <div className="grid flex-1 gap-4 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5 text-[13px] text-muted">
-              Name
-              <input className={inputCls} value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
-            </label>
-            <label className="flex flex-col gap-1.5 text-[13px] text-muted">
-              Email
-              <input type="email" className={inputCls} value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
-            </label>
+          <div className="min-w-0 flex-1">
+            <div className="font-medium">{displayName}</div>
+            <div className="truncate text-[13px] text-muted">{user?.email}</div>
           </div>
+          <button type="button" className={ghostBtn} onClick={logout}>Log out</button>
         </div>
       </section>
 

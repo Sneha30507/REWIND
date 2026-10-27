@@ -1,10 +1,12 @@
 import { FormEvent, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth'
 import Icon from './Icon'
 
 export default function TopBar() {
   const [q, setQ] = useState('')
   const navigate = useNavigate()
+  const { displayName, logout } = useAuth()
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -35,10 +37,17 @@ export default function TopBar() {
 
       <Link to="/settings" className="flex items-center gap-2.5 font-medium hover:text-white">
         <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-[#8B6BFF] to-[#E56BC3] font-bold text-white">
-          S
+          {displayName[0] ?? '?'}
         </div>
-        <span className="hidden sm:inline">Sneha</span>
+        <span className="hidden sm:inline">{displayName}</span>
       </Link>
+      <button
+        type="button"
+        onClick={logout}
+        className="min-h-[44px] rounded-lg px-3 text-[13px] font-medium text-muted hover:text-white"
+      >
+        Log out
+      </button>
     </header>
   )
 }

@@ -13,13 +13,13 @@ from app import models  # noqa: F401  (registers the tables on Base.metadata)
 from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.database import Base, engine
-from app.routers import auth, health, memories
+from app.routers import auth, health, memories, projects
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    # Phase 1 setup: create any missing tables on startup (existing tables and
-    # data are left untouched). See README for why Alembic is not used yet.
+    # Create any missing tables on startup (existing tables and data are left
+    # untouched, so the Phase 2 'projects' table is simply added to an existing DB). See README for why Alembic is not used yet.
     Base.metadata.create_all(bind=engine)
     yield
 
@@ -29,7 +29,7 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
-        description="Backend for the Rewind AI dashboard (Phase 1: auth + memories).",
+        description="Backend for the Rewind AI dashboard (auth, memories, projects).",
         lifespan=lifespan,
     )
 
@@ -45,6 +45,7 @@ def create_app() -> FastAPI:
     application.include_router(health.router)
     application.include_router(auth.router)
     application.include_router(memories.router)
+    application.include_router(projects.router)
     return application
 
 

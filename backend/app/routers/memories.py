@@ -5,6 +5,8 @@ from fastapi import APIRouter, Query
 from app.core.errors import AppError
 from app.dependencies import CurrentUser, DbSession
 from app.schemas import (
+    CategoryCount,
+    CategoryList,
     DeleteResult,
     ErrorResponse,
     MemoryCreate,
@@ -56,7 +58,7 @@ def list_memories(
     return _page(items, total, limit, offset)
 
 
-# NOTE: "/search" must be declared before "/{memory_id}", otherwise FastAPI
+# NOTE: "/search" and "/categories" must be declared before "/{memory_id}", otherwise FastAPI
 # would try to read the word "search" as a memory id.
 @router.get("/search", response_model=MemoryList, responses={422: {"model": ErrorResponse}})
 def search_memories(
@@ -73,6 +75,16 @@ def search_memories(
         db, user.id, q=q, category=category, limit=limit, offset=offset
     )
     return _page(items, total, limit, offset)
+
+
+@router.get("/categories", response_model=CategoryList)
+def list_categories(db: DbSession, user: CurrentUser) -> CategoryList:
+    """How many memories the user has in each category (used for Vault counters)."""
+    rows = memory_service.category_counts(db, user.id)
+    return CategoryList(
+        items=[CategoryCount(category=name, count=count) for name, count in rows],
+        total=sum(count for _, count in rows),
+    )
 
 
 @router.get(

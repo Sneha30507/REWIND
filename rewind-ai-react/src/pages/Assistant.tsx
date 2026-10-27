@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useAuth } from '../auth'
 import Icon from '../components/Icon'
 import { projects, suggestions } from '../data'
 import { inputCls } from '../ui'
@@ -33,9 +34,10 @@ function craftReply(question: string): string {
 
 export default function Assistant() {
   const location = useLocation()
+  const { displayName } = useAuth()
   const initialQuery = (location.state as { query?: string } | null)?.query
   const [messages, setMessages] = useState<Message[]>([
-    { id: 0, role: 'assistant', text: 'Hi Sneha! Ask me about your projects, files or anything you worked on before.' },
+    { id: 0, role: 'assistant', text: `Hi ${displayName}! Ask me about your projects, files or anything you worked on before.` },
   ])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)

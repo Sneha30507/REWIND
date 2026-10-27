@@ -1,14 +1,43 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { activities, stats } from '../data'
+import { memoriesApi, projectsApi } from '../endpoints'
 import Icon from './Icon'
 
+/** "Projects" and "Files Remembered" come from the API; the other two stay demo values. */
+const demoStats = stats.filter((s) => s.label !== 'Projects' && s.label !== 'Files Remembered')
+
 export default function RightPanel() {
+  const [projectCount, setProjectCount] = useState<number | null>(null)
+  const [memoryCount, setMemoryCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    projectsApi
+      .list({ limit: 1 })
+      .then((page) => !cancelled && setProjectCount(page.total))
+      .catch(() => undefined) // shows "-" instead of a number
+    memoriesApi
+      .categories()
+      .then((res) => !cancelled && setMemoryCount(res.total))
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const shown = [
+    { label: 'Projects', value: projectCount === null ? '-' : String(projectCount) },
+    { label: 'Files Remembered', value: memoryCount === null ? '-' : String(memoryCount) },
+    ...demoStats.map((s) => ({ label: s.label, value: String(s.value) })),
+  ]
+
   return (
     <aside className="flex flex-col gap-5 border-t border-line bg-[#0B0B1B] p-5 lg:border-l lg:border-t-0">
       <div className="rounded-[14px] border border-line-card bg-ink-800 p-5">
         <h2 className="mb-[18px] text-[17px] font-semibold">Workspace Overview</h2>
         <div className="grid grid-cols-2 gap-5">
-          {stats.map((s) => (
+          {shown.map((s) => (
             <div key={s.label}>
               <b className="block text-[22px]">{s.value}</b>
               <span className="text-xs text-[#A0A0C0]">{s.label}</span>

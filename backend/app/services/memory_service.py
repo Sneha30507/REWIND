@@ -6,7 +6,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.errors import AppError
-from app.core.utils import utc_now
+from app.core.utils import escape_like, utc_now
 from app.models import Memory
 from app.schemas import MemoryCreate, MemoryUpdate
 
@@ -17,11 +17,6 @@ def _commit(db: Session) -> None:
     except SQLAlchemyError:
         db.rollback()
         raise
-
-
-def _escape_like(term: str) -> str:
-    """Make % and _ match literally instead of acting as SQL wildcards."""
-    return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def create_memory(db: Session, owner_id: int, data: MemoryCreate) -> Memory:
@@ -64,7 +59,7 @@ def list_memories(
         conditions.append(func.lower(Memory.category) == category.strip().lower())
 
     if q:
-        pattern = f"%{_escape_like(q.strip())}%"
+        pattern = f"%{escape_like(q.strip())}%"
         conditions.append(
             or_(
                 Memory.title.ilike(pattern, escape="\\"),
@@ -101,3 +96,15 @@ def delete_memory(db: Session, owner_id: int, memory_id: int) -> None:
     memory = get_memory(db, owner_id, memory_id)
     db.delete(memory)
     _commit(db)
+
+
+def category_counts(db: Session, owner_id: int) -> list[tuple[str, int]]:
+    """Return (category, number of memories) for this owner, grouped case-insensitively."""
+    lowered = func.lower(Memory.category)
+    rows = db.execute(
+        select(lowered, func.count())
+        .where(Memory.owner_id == owner_id)
+        .group_by(lowered)
+        .order_by(lowered)
+    ).all()
+    return [(category, count) for category, count in rows]
